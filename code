@@ -1,0 +1,98 @@
+#include "SIM900.h"
+#include <SoftwareSerial.h>
+#include "sms.h"
+#define Quick_PIN 2
+#define Rinse_Spin_PIN 4
+#define Drain_PIN 12
+#define error_PIN 13
+SMSGSM sms;
+boolean started=false;
+char sms_position;
+char phone_number[20];
+char sms_text[170];
+int i;
+void setup()
+{
+pinMode(Quick_PIN,OUTPUT);
+pinMode(Rinse_Spin_PIN,OUTPUT);
+pinMode(Drain_PIN,OUTPUT);
+Serial.begin(9600);
+if (gsm.begin(9600))
+{
+Serial.println("nstatus=READY");
+started=true;
+}
+else
+{
+Serial.println("nstatus=IDLE");
+}
+};
+void loop()
+{
+if(started)
+{
+sms_position=sms.IsSMSPresent(SMS_UNREAD);
+if (sms_position)
+{
+// read new SMS
+Serial.print("SMS postion:");
+Serial.println(sms_position,DEC);
+sms.GetSMS(sms_position, phone_number, sms_text, 100);
+// now we have phone number string in phone_num
+Serial.println(phone_number);
+// and SMS text in sms_text
+Serial.println(sms_text);
+if( phone_number[0]== '+' & phone_number[1]== '9' & phone_number[2]== '8' & phone_number[3]== '9' & phone_number[4]== '1' & phone_number[5]== '1' & phone_number[6]== '5' & phone_number[7]== '0' & phone_number[8]== '1' & phone_number[9]== '6' & phone_number[10]== '2' & phone_number[11]== '3' & phone_number[12]== '1' )
+{
+Serial.println("shomare doroste");
+if (sms_text[0]== 'Q' & sms_text[1]== 'u' & sms_text[2]=='i'& sms_text[3]=='c'& sms_text[4]=='k')
+{
+digitalWrite( Quick_PIN ,HIGH);
+digitalWrite( Rinse_Spin_PIN ,LOW);
+digitalWrite( Drain_PIN ,LOW);
+sms.SendSMS("+989115016231", "Quick Done");
+Serial.println("Quick Done");
+}
+else if (sms_text[0]== 'R' & sms_text[1]== 'i' & sms_text[2]== 'n' & sms_text[3]== 's' & sms_text[4]== 'e' & sms_text[5]== '+' & sms_text[6]== 'S' & sms_text[7]== 'p' & sms_text[8]== 'i'& sms_text[9]== 'n' )
+{
+digitalWrite( Rinse_Spin_PIN ,HIGH);
+digitalWrite( Quick_PIN ,LOW);
+digitalWrite( Drain_PIN ,LOW);
+sms.SendSMS("+989115016231", "Rinse+Spin Done");
+Serial.println("Rinse+Spin Done");
+}
+else if (sms_text[0]== 'D' & sms_text[1]== 'r' & sms_text[2]=='a'& sms_text[3]=='i'& sms_text[4]=='n' )
+{
+digitalWrite( Drain_PIN ,HIGH);
+digitalWrite( Rinse_Spin_PIN ,LOW);
+digitalWrite( Quick_PIN ,LOW);
+sms.SendSMS("+989115016231", "Drain Done");
+Serial.println("Drain Done");
+}
+else
+{
+// turn on red led
+digitalWrite( error_PIN ,HIGH);
+digitalWrite( Drain_PIN ,LOW);
+digitalWrite( Rinse_Spin_PIN ,LOW);
+digitalWrite( Quick_PIN ,LOW);
+sms.SendSMS("+989115016231", "Error");
+Serial.println("Error");
+}
+}
+else
+{
+digitalWrite( error_PIN ,HIGH);
+digitalWrite( Drain_PIN ,LOW);
+digitalWrite( Rinse_Spin_PIN ,LOW);
+digitalWrite( Quick_PIN ,LOW);
+sms.SendSMS("+989115016231", "Error");
+Serial.println("Error");
+}
+}
+}
+else
+{
+//Serial.println("NO NEW SMS,WAITTING");
+}
+}
